@@ -1,9 +1,11 @@
-﻿/* 全局 */
+﻿ 
+/* 全局 */
 body { font-family: verdana,arial,helvetica,sans-serif; font-size: 12px;}
 a {text-decoration: none; }
 
 /* 风火轮 */
-a.waitting { display:inline-block; height: 16px; width: 16px; border:0; background:url("images/waitting.gif")}
+a.waitting { display:inline-block; height: 16px; width: 16px; border:0; background:url("images/waitting.gif"); vertical-align:middle}
+a.waitting.error { background:url("images/warning.png"); cursor:pointer}
 
 /* 布局 */
 footer, header {height: 32px; background: url("images/header_bg.png") repeat-x scroll right 0 transparent}

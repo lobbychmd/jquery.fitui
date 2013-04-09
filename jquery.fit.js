@@ -39,38 +39,67 @@ $.fn.waitting = function (option) {
         if (option.show) {
             $(this).show().next("a.waitting").remove();
         }
-        else {
+        else if (option.error) {
+            var obj = $(this);
+            obj.next("a.waitting").addClass("error").click(function () {
+                $("<div class='waittingError'>").html(option.error.responseText).appendTo('body').dialog({
+                    modal: true,
+                    width: $(window).width() * 0.75,
+                    height: $(window).height() * 0.75,
+                    close: function () { $(".waittingError").remove(); }
+                });
+                $(this).remove();
+                obj.show();
+            });
+        } else {
             $(this).hide();
             $("<a>").addClass("waitting").insertAfter(this);
         }
+
     });
 }
 
-$.fn.ajaxpost = function () {
+$.fn.getpost = function (option) {
+    option = $.extend({}, option);
     return this.each(function () {
         var btn = $(this);
         btn.click(function () {
-            var form = btn.closest('form');
+            var form = option.form ? option.form : btn.closest('form');
             var action = btn.attr('action');
+            var href = $(this).attr('href');
+            if (!action && href) {
+                window.location = href;
+                return false;
+            }
+            else if (!option.ajax) {
+                form[0].submit();
+                return false;
+            }
             var rel = btn.attr('rel');
             btn.waitting();
-            $.post(action, form.serializeArray(), function (data) {
+            $.ajax(action, { data: form.serializeArray(), type: "post" }).done(function (data) {
                 if (typeof data == "string") {
                     var r = JSON.parse(data);
                     if (!r) r = { IsValid: !data };
                 } else var r = data;
 
-                if (r.IsValid) window.location = rel ? rel : "/";
+                if (r.IsValid) window.location = rel ? rel : window.location.toString();
                 else {
                     alert(_.map(r.Errors, function (i) { return i.ErrorMessage; }).join("\n"));
                     form.find("[name]").removeClass("error");
                     _.each(r.Errors, function (i) {
                         _.each(i.MemberNames, function (j) {
-                            form.find("[name=" + j + "]").addClass("error");
+                            if (j.indexOf('.') > 0) j = "[name$=\"\[" + j.split('.')[1] + "\]." + j.split('.')[0] + "\"]";
+                            else j = '[name=' + j + ']';
+                             form.find(j).addClass("error");
                         });
                     });
                     btn.waitting({ show: true });
                 }
+            }).fail(function (jqXHR, ajaxSettings, thrownError) {
+                console.log(jqXHR);
+                btn.waitting({ error: jqXHR });
+                alert(thrownError);
             });
             return false;
         });
