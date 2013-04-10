@@ -64,6 +64,9 @@ $.fn.getpost = function (option) {
     return this.each(function () {
         var btn = $(this);
         btn.click(function () {
+            var con = $(this).attr("confirm");
+            if (con && !confirm(con)) return false;
+
             var form = option.form ? option.form : btn.closest('form');
             var action = btn.attr('action');
             var href = $(this).attr('href');
@@ -83,7 +86,13 @@ $.fn.getpost = function (option) {
                     if (!r) r = { IsValid: !data };
                 } else var r = data;
 
-                if (r.IsValid) window.location = rel ? rel : window.location.toString();
+                if (r.IsValid) {
+                    var url = rel ? rel : window.location.toString();
+                    if (r.ReturnValues)
+                        for (var i in r.ReturnValues)
+                            url += (url.indexOf("?") ? "&" : "?") + i + "=" + r.ReturnValues[i];
+                    window.location = url;
+                }
                 else {
                     alert(_.map(r.Errors, function (i) { return i.ErrorMessage; }).join("\n"));
                     form.find("[name]").removeClass("error");
@@ -91,7 +100,7 @@ $.fn.getpost = function (option) {
                         _.each(i.MemberNames, function (j) {
                             if (j.indexOf('.') > 0) j = "[name$=\"\[" + j.split('.')[1] + "\]." + j.split('.')[0] + "\"]";
                             else j = '[name=' + j + ']';
-                             form.find(j).addClass("error");
+                            form.find(j).addClass("error");
                         });
                     });
                     btn.waitting({ show: true });
